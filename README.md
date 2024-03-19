@@ -1,5 +1,5 @@
 _SciCore_ is a C++20 scientific computing library. The main focus lies on computations with matrix-valued data.
-For example, given a function \f$ f: \mathbb{R} \rightarrow \mathbb{C}^{n\times m} \f$ one can interpolate \f$f\f$ using Chebyshev polynomials, integrate it with various methods or use it in the solution of
+For example, given a function $f: \mathbb{R} \rightarrow \mathbb{C}^{n\times m}$ one can interpolate $f$ using Chebyshev polynomials, integrate it with various methods or use it in the solution of
 (integro)-differential equations.
 
 ## Dependencies
@@ -11,7 +11,7 @@ This library uses some C++-20 features and therefore needs a not too old compile
 Some functionalities require _blas_ and _lapacke_ packages, which are on Ubuntu-type systems most easily installed with
 
 ```console
-apt install libopenblas-dev liblapacke-dev
+$ apt install libopenblas-dev liblapacke-dev
 ```
 
 The following dependencies will be automatically downloaded in the build process:
