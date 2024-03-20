@@ -3,5 +3,6 @@
 include(CMakeFindDependencyMacro)
 find_dependency(cereal)
 find_dependency(Eigen3)
+find_dependency(Taskflow)
 
 include("${CMAKE_CURRENT_LIST_DIR}/SciCoreTargets.cmake")
