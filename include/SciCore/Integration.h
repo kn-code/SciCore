@@ -572,7 +572,7 @@ struct TrapezoidIntegrator
     ResultT lastResult;
     int n;
 
-    TrapezoidIntegrator(Real a, Real b) noexcept : a(a), b(b), n(0)
+    TrapezoidIntegrator(Real lowerLimit, Real upperLimit) noexcept : a(lowerLimit), b(upperLimit), n(0)
     {
     }
 

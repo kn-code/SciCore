@@ -329,7 +329,7 @@ class ChebAdaptive
             auto result                    = it->second.integrate();
             result                        += constant;
             returnValue._chebs[it->first]  = result;
-            auto rBeg                      = returnValue._chebs.rbegin();
+            rBeg                           = returnValue._chebs.rbegin();
             constant                       = rBeg->second(rBeg->second.upperLimit());
         }
 

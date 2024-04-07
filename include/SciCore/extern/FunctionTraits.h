@@ -6443,7 +6443,7 @@ inline constexpr bool ForEach(ForEachFunctorT&& functor)
         // "&" or "&&" context below. See comments below.
         ////////////////////////////////////////////////////////////
         const auto process = [&functor]<std::size_t I>
-                             (const auto &process)
+                             (const auto &p)
                              {
                                  if constexpr (I < N)
                                  {
@@ -6482,7 +6482,7 @@ inline constexpr bool ForEach(ForEachFunctorT&& functor)
                                          // stamps out and runs another version of this
                                          // function specialized on I + 1)
                                          ////////////////////////////////////////////////
-                                         return process.template operator()<I + 1>(process);
+                                         return p.template operator()<I + 1>(p);
                                      }
                                      else
                                      {
