@@ -67,8 +67,12 @@ TEST(ChebAdaptive, ConstructScalarFunctionAbsErr)
     ChebAdaptive chebf(f, a, b, epsAbs, epsRel, 0);
 
     RealVector xValues = RealVector::LinSpaced(1000, a, b);
+    RealVector fValues = chebf(xValues);
+
+    int i = 0;
     for (Real x : xValues)
     {
+        EXPECT_EQ(chebf(x), fValues[i++]);
         EXPECT_LT(std::abs(chebf(x) - f(x)), 1e-12)
             << "x =" << x << "f(x) =" << f(x) << "chebf.sections() =" << chebf.sections().transpose();
     }

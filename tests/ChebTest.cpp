@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <fstream>
 
-
 #include <SciCore/Cheb.h>
 
 using namespace SciCore;
@@ -120,11 +119,11 @@ TEST(chopChebSeriesAbsolute, Test)
     };
 
     std::vector testData{
-            TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-8, 12},
-            TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-5, 10},
-            TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-3, 7},
-            TestData{RealVector{{1, 3, 1e-5, 4}}, 10, 3},
-        };
+        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-8, 12},
+        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-5, 10},
+        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-3,  7},
+        TestData{                                                  RealVector{{1, 3, 1e-5, 4}},   10,  3},
+    };
 
     for (auto& test : testData)
     {
@@ -154,9 +153,13 @@ TEST(Cheb, ConstructScalarSmoothFunction)
     testMonotonicity = false;
 
     RealVector xValues = RealVector::LinSpaced(100, a, b);
+    RealVector fValues = interp(xValues);
+
+    int i = 0;
     for (Real x : xValues)
     {
         EXPECT_LT(std::abs(f(x) - interp(x)), 1e-13);
+        EXPECT_EQ(interp(x), fValues[i++]);
     }
 
     interp.chopCoefficients(0, 1e-11);
@@ -183,8 +186,7 @@ TEST(Cheb, ConstructLog)
     EXPECT_EQ(interp.chopCoefficients(0, 1e-11), true);
     for (Real x : xValues)
     {
-        EXPECT_LT(relError(interp(x), f(x)), 1e-11)
-            << "x =" << x << "f(x) =" << f(x) << "interp(x) = " << interp(x);
+        EXPECT_LT(relError(interp(x), f(x)), 1e-11) << "x =" << x << "f(x) =" << f(x) << "interp(x) = " << interp(x);
     }
 }
 
@@ -202,13 +204,17 @@ TEST(Cheb, ConstructComplexPow)
     };
 
     Cheb interp(f, a, b, n);
+    EXPECT_EQ(interp.chopCoefficients(0, 1e-9), true);
 
     RealVector xValues = RealVector::LinSpaced(100, a, b);
-    EXPECT_EQ(interp.chopCoefficients(0, 1e-9), true);
+    Vector fValues     = interp(xValues);
+
+    int i = 0;
     for (Real x : xValues)
     {
-        EXPECT_LT(maxNorm(interp(x) - f(x)), 2e-8) << "x =" << x << "f(x) =" << f(x) << "interp(x) =" << interp(x)
-                                                    << " err =" << maxNorm(interp(x) - f(x));
+        EXPECT_EQ(interp(x), fValues[i++]);
+        EXPECT_LT(maxNorm(interp(x) - f(x)), 2e-8)
+            << "x =" << x << "f(x) =" << f(x) << "interp(x) =" << interp(x) << " err =" << maxNorm(interp(x) - f(x));
     }
 }
 
@@ -244,12 +250,12 @@ TEST(Cheb, ConstructFromArray)
 TEST(Cheb, ConstructMatrixFunction)
 {
     using std::cos;
-    using std::sin;
-    using std::pow;
     using std::exp;
     using std::log;
+    using std::pow;
+    using std::sin;
 
-// clang-format off
+    // clang-format off
 //! [Basic cheb usage]
 // Some complicated and hard to compute function
 auto f = [](Real t) -> Matrix
@@ -268,7 +274,7 @@ int n  = 128;   // Number of Chebyshev coefficients to use
 // Compute approximation
 Cheb interp(f, a, b, n);
 //! [Basic cheb usage]
-// clang-format on
+    // clang-format on
 
     RealVector xValues = RealVector::LinSpaced(100, a, b);
     for (Real x : xValues)
@@ -292,11 +298,11 @@ TEST(Cheb, AdaptiveConstructionRealVectorFunction)
         };
     };
 
-    Real a       = -20;
-    Real b       = 20;
-    Real epsAbs  = 0;
-    Real epsRel  = 1e-8;
-    bool ok      = false;
+    Real a      = -20;
+    Real b      = 20;
+    Real epsAbs = 0;
+    Real epsRel = 1e-8;
+    bool ok     = false;
     Cheb c(f, a, b, epsAbs, epsRel, 16, 2, &ok);
 
     EXPECT_EQ(ok, true);
@@ -397,7 +403,6 @@ TEST(Cheb, MultiplyScalarConstant)
     }
 }
 
-
 TEST(Cheb, IntegrateScalarSmoothFunction)
 {
     auto f = [](Real x) -> Real
@@ -407,8 +412,7 @@ TEST(Cheb, IntegrateScalarSmoothFunction)
 
     auto F = [](Real x)
     {
-        return (3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) +
-                exp(x) * sin(3.0 * x)) /
+        return (3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) + exp(x) * sin(3.0 * x)) /
                10.0;
     };
 
@@ -437,8 +441,7 @@ TEST(Cheb, IntegrateMatrixFunction)
     auto F = [](Real x) -> RealMatrix
     {
         return RealMatrix{
-            {(3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) +
-              exp(x) * sin(3.0 * x)) /
+            {(3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) + exp(x) * sin(3.0 * x)) /
              10.0}};
     };
 
@@ -467,9 +470,9 @@ TEST(Cheb, IntegrateSparseMatrixFunction)
     auto F = [](Real x) -> SparseRealMatrix
     {
         SparseRealMatrix A(5, 5);
-        A.insert(3, 4) = (3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) +
-                            exp(x) * sin(3.0 * x)) /
-                            10.0;
+        A.insert(3, 4) =
+            (3.0 * exp(1.0) * cos(3.0) - 3.0 * exp(x) * cos(3.0 * x) - exp(1.0) * sin(3.0) + exp(x) * sin(3.0 * x)) /
+            10.0;
         return A;
     };
 
@@ -601,7 +604,7 @@ TEST(Cheb, Serialize)
     EXPECT_EQ(fromFile, interpolation);
 
     // Use JSON file
-    std::string jsonFilename   = "cheb_test_serialization.json";
+    std::string jsonFilename = "cheb_test_serialization.json";
     std::remove(jsonFilename.c_str());
     {
         std::ofstream os(jsonFilename);

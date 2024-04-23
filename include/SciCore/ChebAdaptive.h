@@ -258,6 +258,32 @@ class ChebAdaptive
     }
 
     ///
+    /// \brief Evaluates the interpolation at at all points in \a x. Only works if \a ElementType is \a Real.
+    ///
+    RealVector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Real>
+    {
+        RealVector returnValue(x.size());
+        for (int i = 0; i < x.size(); ++i)
+        {
+            returnValue[i] = this->operator()(x[i]);
+        }
+        return returnValue;
+    }
+
+    ///
+    /// \brief Evaluates the interpolation at at all points in \a x. Only works if \a ElementType is \a Complex.
+    ///
+    Vector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Complex>
+    {
+        Vector returnValue(x.size());
+        for (int i = 0; i < x.size(); ++i)
+        {
+            returnValue[i] = this->operator()(x[i]);
+        }
+        return returnValue;
+    }
+
+    ///
     /// \brief      Equality operator.
     ///
     bool operator==(const ChebAdaptive& other) const noexcept
