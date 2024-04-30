@@ -17,6 +17,7 @@
 
 #include "DCT.h"
 #include "Definitions.h"
+#include "Parallel.h"
 #include "Serialization.h"
 #include "Utility.h"
 
@@ -70,7 +71,7 @@ T chebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
         // {
         //     return 0;
         // }
-        return Real(0.5) *  c[0];
+        return Real(0.5) * c[0];
     }
 
     T b1 = c[length - 1];
@@ -439,12 +440,47 @@ class Cheb
         if (buffer == nullptr)
         {
             std::vector<T> newBuffer((size_t)(nStart * pow(3, nTrip)));
-            errorOk =
-                _computeAdaptive(std::forward<FunctionT>(f), epsAbs, epsRel, nStart, nTrip, newBuffer.data());
+            errorOk = _computeAdaptive(std::forward<FunctionT>(f), epsAbs, epsRel, nStart, nTrip, newBuffer.data());
         }
         else
         {
             errorOk = _computeAdaptive(std::forward<FunctionT>(f), epsAbs, epsRel, nStart, nTrip, buffer);
+        }
+
+        if (ok != nullptr)
+        {
+            *ok = errorOk;
+        }
+    }
+
+    template <typename FunctionT>
+        requires std::invocable<FunctionT, Real>
+    Cheb(
+        FunctionT&& f,
+        Real a,
+        Real b,
+        Real epsAbs,
+        Real epsRel,
+        tf::Executor& executor,
+        int nStart,
+        int nTrip = 2,
+        bool* ok  = nullptr,
+        T* buffer = nullptr)
+        : _a(a), _b(b)
+    {
+        assert(nStart >= 2);
+        assert(nTrip >= 0);
+
+        bool errorOk;
+        if (buffer == nullptr)
+        {
+            std::vector<T> newBuffer((size_t)(nStart * pow(3, nTrip)));
+            errorOk =
+                _computeAdaptive(std::forward<FunctionT>(f), epsAbs, epsRel, executor, nStart, nTrip, newBuffer.data());
+        }
+        else
+        {
+            errorOk = _computeAdaptive(std::forward<FunctionT>(f), epsAbs, epsRel, executor, nStart, nTrip, buffer);
         }
 
         if (ok != nullptr)
@@ -514,7 +550,8 @@ class Cheb
     ///
     /// \brief Evaluates the Chebyshev series at at all points in \a x. Only works if \a ElementType is \a Real.
     ///
-    RealVector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Real>
+    RealVector operator()(const RealVector& x)
+        requires std::is_same_v<std::decay_t<T>, Real>
     {
         RealVector returnValue(x.size());
         for (int i = 0; i < x.size(); ++i)
@@ -527,7 +564,8 @@ class Cheb
     ///
     /// \brief Evaluates the Chebyshev series at at all points in \a x. Only works if \a ElementType is \a Complex.
     ///
-    Vector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Complex>
+    Vector operator()(const RealVector& x)
+        requires std::is_same_v<std::decay_t<T>, Complex>
     {
         Vector returnValue(x.size());
         for (int i = 0; i < x.size(); ++i)
@@ -900,15 +938,13 @@ class Cheb
             n       *= 3;
             inv_n    = 1 / static_cast<Real>(n);
             newCoeff.resize(n);
-            Real y              = std::cos(std::numbers::pi_v<Real> / 2 * inv_n);
-            newCoeff[0]         = (2 * inv_n) * f(std::fma(y, bma, bpa));
-            size_t oldDataIndex = 0;
+            Real y      = std::cos(std::numbers::pi_v<Real> / 2 * inv_n);
+            newCoeff[0] = (2 * inv_n) * f(std::fma(y, bma, bpa));
             for (int j = 1; j < n; ++j)
             {
                 if ((j - 1) % 3 == 0)
                 {
-                    newCoeff[j] = _coeffs[oldDataIndex] / Real(3);
-                    ++oldDataIndex;
+                    newCoeff[j] = _coeffs[(j - 1) / 3] / Real(3);
                 }
                 else
                 {
@@ -916,6 +952,87 @@ class Cheb
                     newCoeff[j] = (2 * inv_n) * f(std::fma(y, bma, bpa));
                 }
             }
+
+            _coeffs = newCoeff;
+            dct(_coeffs.data(), n, buffer);
+
+            if (chopCoefficients(epsAbs, epsRel) == true)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Buffer needs to contain nStart*(nTrip+1) elements
+    template <typename FunctionT>
+    bool _computeAdaptive(
+        FunctionT&& f,
+        Real epsAbs,
+        Real epsRel,
+        tf::Executor& executor,
+        int nStart,
+        int nTrip,
+        T* buffer)
+    {
+        assert(nStart >= 2);
+        assert(nTrip >= 0);
+
+        Real bma = (_b - _a) / 2;
+        Real bpa = (_b + _a) / 2;
+
+        //
+        // Compute first approximation
+        //
+        int n = nStart;
+        std::vector<T> newCoeff(n);
+        _coeffs    = std::vector<T>(n);
+        Real inv_n = 1 / static_cast<Real>(n);
+
+        parallelFor(
+            [&f, bma, bpa, inv_n, &newCoeff](int j)
+            {
+                Real y      = std::cos(std::numbers::pi_v<Real> * (j + Real(0.5)) * inv_n);
+                newCoeff[j] = (2 * inv_n) * f(std::fma(y, bma, bpa));
+            },
+            0, n, n, executor);
+
+        _coeffs = newCoeff;
+        dct(_coeffs.data(), n, buffer);
+
+        if (chopCoefficients(epsAbs, epsRel) == true)
+        {
+            return true;
+        }
+
+        //
+        // Else if initial approximation is not good enough:
+        // improve by tripling number of points
+        //
+        for (int iterTripling = 0; iterTripling < nTrip; ++iterTripling)
+        {
+            _coeffs  = newCoeff; // Restore original data points
+            n       *= 3;
+            inv_n    = 1 / static_cast<Real>(n);
+            newCoeff.resize(n);
+            Real y0     = std::cos(std::numbers::pi_v<Real> / 2 * inv_n);
+            newCoeff[0] = (2 * inv_n) * f(std::fma(y0, bma, bpa));
+
+            parallelFor(
+                [this, &f, bma, bpa, inv_n, &newCoeff](int j)
+                {
+                    if ((j - 1) % 3 == 0)
+                    {
+                        newCoeff[j] = _coeffs[(j - 1) / 3] / Real(3);
+                    }
+                    else
+                    {
+                        Real y      = std::cos(std::numbers::pi_v<Real> * (j + Real(0.5)) * inv_n);
+                        newCoeff[j] = (2 * inv_n) * f(std::fma(y, bma, bpa));
+                    }
+                },
+                1, n, n, executor);
 
             _coeffs = newCoeff;
             dct(_coeffs.data(), n, buffer);
@@ -943,6 +1060,18 @@ Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, int nStart, int nT
 
 template <typename FunctionT>
 Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, int nStart, int nTrip, bool* ok)
+    -> Cheb<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, tf::Executor&, int nStart)
+    -> Cheb<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, tf::Executor&, int nStart, int nTrip)
+    -> Cheb<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, tf::Executor&, int nStart, int nTrip, bool* ok)
     -> Cheb<std::invoke_result_t<FunctionT, Real>>;
 
 #ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES

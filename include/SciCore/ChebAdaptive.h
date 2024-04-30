@@ -119,13 +119,46 @@ class ChebAdaptive
         if (buffer == nullptr)
         {
             std::vector<T> newBuffer((size_t)(nStart * std::pow(3, nTrip)));
-            errorOk = _startAddIntervals(
-                std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, nStart, nTrip, newBuffer.data());
+            errorOk =
+                _addInterval(std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, nStart, nTrip, newBuffer.data());
         }
         else
         {
-            errorOk = _startAddIntervals(
-                std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+            errorOk = _addInterval(std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+        }
+
+        if (ok != nullptr)
+        {
+            *ok = errorOk;
+        }
+    }
+
+    template <typename FunctionT>
+        requires std::invocable<FunctionT, Real>
+    ChebAdaptive(
+        FunctionT&& f,
+        Real a,
+        Real b,
+        Real epsAbs,
+        Real epsRel,
+        Real hMin,
+        tf::Executor& executor,
+        bool* ok   = nullptr,
+        int nStart = 16,
+        int nTrip  = 2,
+        T* buffer  = nullptr)
+    {
+        bool errorOk;
+        if (buffer == nullptr)
+        {
+            std::vector<T> newBuffer((size_t)(nStart * std::pow(3, nTrip)));
+            errorOk = _addInterval(
+                std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, executor, nStart, nTrip, newBuffer.data());
+        }
+        else
+        {
+            errorOk =
+                _addInterval(std::forward<FunctionT>(f), a, b, epsAbs, epsRel, hMin, executor, nStart, nTrip, buffer);
         }
 
         if (ok != nullptr)
@@ -179,9 +212,9 @@ class ChebAdaptive
             std::vector<T> newBuffer((size_t)(nStart * pow(3, nTrip)));
             for (int i = 0; i < sections.size() - 1; ++i)
             {
-                if (_startAddIntervals(
-                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, nStart,
-                        nTrip, newBuffer.data()) == false)
+                if (_addInterval(
+                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, nStart, nTrip,
+                        newBuffer.data()) == false)
                 {
                     errorOk = false;
                 }
@@ -191,9 +224,58 @@ class ChebAdaptive
         {
             for (int i = 0; i < sections.size() - 1; ++i)
             {
-                if (_startAddIntervals(
-                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, nStart,
-                        nTrip, buffer) == false)
+                if (_addInterval(
+                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, nStart, nTrip,
+                        buffer) == false)
+                {
+                    errorOk = false;
+                }
+            }
+        }
+
+        if (ok != nullptr)
+        {
+            *ok = errorOk;
+        }
+    }
+
+    template <typename FunctionT>
+        requires std::invocable<FunctionT, Real>
+    ChebAdaptive(
+        FunctionT&& f,
+        const RealVector& sections,
+        Real epsAbs,
+        Real epsRel,
+        Real hMin,
+        tf::Executor& executor,
+        bool* ok   = nullptr,
+        int nStart = 16,
+        int nTrip  = 2,
+        T* buffer  = nullptr)
+    {
+        assert(sections.size() >= 2);
+
+        bool errorOk = true;
+        if (buffer == nullptr)
+        {
+            std::vector<T> newBuffer((size_t)(nStart * pow(3, nTrip)));
+            for (int i = 0; i < sections.size() - 1; ++i)
+            {
+                if (_addInterval(
+                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, executor,
+                        nStart, nTrip, newBuffer.data()) == false)
+                {
+                    errorOk = false;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < sections.size() - 1; ++i)
+            {
+                if (_addInterval(
+                        std::forward<FunctionT>(f), sections[i], sections[i + 1], epsAbs, epsRel, hMin, executor,
+                        nStart, nTrip, buffer) == false)
                 {
                     errorOk = false;
                 }
@@ -260,7 +342,8 @@ class ChebAdaptive
     ///
     /// \brief Evaluates the interpolation at at all points in \a x. Only works if \a ElementType is \a Real.
     ///
-    RealVector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Real>
+    RealVector operator()(const RealVector& x)
+        requires std::is_same_v<std::decay_t<T>, Real>
     {
         RealVector returnValue(x.size());
         for (int i = 0; i < x.size(); ++i)
@@ -273,7 +356,8 @@ class ChebAdaptive
     ///
     /// \brief Evaluates the interpolation at at all points in \a x. Only works if \a ElementType is \a Complex.
     ///
-    Vector operator()(const RealVector& x) requires std::is_same_v<std::decay_t<T>, Complex>
+    Vector operator()(const RealVector& x)
+        requires std::is_same_v<std::decay_t<T>, Complex>
     {
         Vector returnValue(x.size());
         for (int i = 0; i < x.size(); ++i)
@@ -438,7 +522,7 @@ class ChebAdaptive
         auto last = _chebs.rbegin();
         if (last->second.upperLimit() != lowerLimit)
         {
-            if (std::abs(last->second.upperLimit() - lowerLimit) < 10*std::numeric_limits<Real>::epsilon())
+            if (std::abs(last->second.upperLimit() - lowerLimit) < 10 * std::numeric_limits<Real>::epsilon())
             {
                 lowerLimit = last->second.upperLimit();
             }
@@ -469,40 +553,6 @@ class ChebAdaptive
 
   private:
     template <typename FunctionT>
-    bool _startAddIntervals(
-        FunctionT&& f,
-        Real a,
-        Real b,
-        Real epsAbs,
-        Real epsRel,
-        Real hMin,
-        int nStart,
-        int nTrip,
-        T* buffer)
-    {
-        bool ok = false;
-        Cheb<T> c(std::forward<FunctionT>(f), a, b, epsAbs, epsRel, nStart, nTrip, &ok, buffer);
-
-        if (ok == true)
-        {
-            _chebs[a] = std::move(c);
-        }
-        else if (b - a < hMin)
-        {
-            _chebs[a] = std::move(c);
-        }
-        else
-        {
-            bool okLeft = _addInterval(
-                std::forward<FunctionT>(f), a, (a + b) / 2, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
-            bool okRight = _addInterval(
-                std::forward<FunctionT>(f), (a + b) / 2, b, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
-            ok = (okLeft == true) && (okRight == true);
-        }
-        return ok;
-    }
-
-    template <typename FunctionT>
     bool _addInterval(
         FunctionT&& f,
         Real a,
@@ -527,10 +577,45 @@ class ChebAdaptive
         }
         else
         {
+            bool okLeft =
+                _addInterval(std::forward<FunctionT>(f), a, (a + b) / 2, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+            bool okRight =
+                _addInterval(std::forward<FunctionT>(f), (a + b) / 2, b, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+            ok = (okLeft == true) && (okRight == true);
+        }
+        return ok;
+    }
+
+    template <typename FunctionT>
+    bool _addInterval(
+        FunctionT&& f,
+        Real a,
+        Real b,
+        Real epsAbs,
+        Real epsRel,
+        Real hMin,
+        tf::Executor& executor,
+        int nStart,
+        int nTrip,
+        T* buffer)
+    {
+        bool ok = false;
+        Cheb<T> c(std::forward<FunctionT>(f), a, b, epsAbs, epsRel, executor, nStart, nTrip, &ok, buffer);
+
+        if (ok == true)
+        {
+            _chebs[a] = std::move(c);
+        }
+        else if (b - a < hMin)
+        {
+            _chebs[a] = std::move(c);
+        }
+        else
+        {
             bool okLeft = _addInterval(
-                std::forward<FunctionT>(f), a, (a + b) / 2, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+                std::forward<FunctionT>(f), a, (a + b) / 2, epsAbs, epsRel, hMin, executor, nStart, nTrip, buffer);
             bool okRight = _addInterval(
-                std::forward<FunctionT>(f), (a + b) / 2, b, epsAbs, epsRel, hMin, nStart, nTrip, buffer);
+                std::forward<FunctionT>(f), (a + b) / 2, b, epsAbs, epsRel, hMin, executor, nStart, nTrip, buffer);
             ok = (okLeft == true) && (okRight == true);
         }
         return ok;
@@ -544,11 +629,27 @@ ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin)
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, tf::Executor&)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
 ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, bool* ok)
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, tf::Executor&, bool* ok)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
 ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, bool* ok, int nStart)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, tf::Executor&, bool* ok, int nStart)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin, bool* ok, int nStart, int nTrip)
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
@@ -559,6 +660,7 @@ ChebAdaptive(
     Real epsAbs,
     Real epsRel,
     Real hMin,
+    tf::Executor&,
     bool* ok,
     int nStart,
     int nTrip) -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
@@ -568,11 +670,27 @@ ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsAbs, Real epsRel
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsAbs, Real epsRel, Real hMin, tf::Executor&)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
 ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsAbs, Real epsRel, Real hMin, bool* ok)
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsAbs, Real epsRel, Real hMin, tf::Executor&, bool* ok)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
 ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsRel, Real hMin, bool* ok, int nStart)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsRel, Real hMin, tf::Executor&, bool* ok, int nStart)
+    -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
+
+template <typename FunctionT>
+ChebAdaptive(FunctionT&& f, const RealVector& sections, Real epsRel, Real hMin, bool* ok, int nStart, int nTrip)
     -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
 
 template <typename FunctionT>
@@ -581,6 +699,7 @@ ChebAdaptive(
     const RealVector& sections,
     Real epsRel,
     Real hMin,
+    tf::Executor&,
     bool* ok,
     int nStart,
     int nTrip) -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;

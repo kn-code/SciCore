@@ -312,6 +312,12 @@ TEST(Cheb, AdaptiveConstructionRealVectorFunction)
     {
         EXPECT_LT(relError(c(x), f(x)), 1e-8) << "x =" << x;
     }
+
+    // Construct again with parallel algorithm, check that they are exactly equal
+    tf::Executor executor(4);
+    Cheb c2(f, a, b, epsAbs, epsRel, executor, 16, 2, &ok);
+
+    EXPECT_EQ(c, c2);
 }
 
 TEST(Cheb, AddRealMatrices)

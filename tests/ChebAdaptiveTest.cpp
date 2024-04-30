@@ -19,7 +19,7 @@ using std::sin;
 
 TEST(ChebAdaptive, ConstructScalarFunctionRelErr)
 {
-// clang-format off
+    // clang-format off
 //! [Basic adaptive cheb usage]
 auto f = [](Real x) -> Real
 {
@@ -32,7 +32,7 @@ Real epsAbs = 0;
 Real epsRel = 1e-12;
 ChebAdaptive chebf(f, a, b, epsAbs, epsRel, 0);
 //! [Basic adaptive cheb usage]
-// clang-format on
+    // clang-format on
 
     std::cout << "Sections:" << chebf.sections().transpose() << "\n"
               << "Number coefficients: " << chebf.numCoefficients().transpose() << "\n";
@@ -51,6 +51,11 @@ ChebAdaptive chebf(f, a, b, epsAbs, epsRel, 0);
                 << "x =" << x << "f(x) =" << f(x) << "chebf.sections() =" << chebf.sections().transpose();
         }
     }
+
+    // Construct again in parallel and check its the same
+    tf::Executor executor;
+    ChebAdaptive chebf2(f, a, b, epsAbs, epsRel, 0, executor);
+    EXPECT_EQ(chebf, chebf2);
 }
 
 TEST(ChebAdaptive, ConstructScalarFunctionAbsErr)
@@ -76,6 +81,11 @@ TEST(ChebAdaptive, ConstructScalarFunctionAbsErr)
         EXPECT_LT(std::abs(chebf(x) - f(x)), 1e-12)
             << "x =" << x << "f(x) =" << f(x) << "chebf.sections() =" << chebf.sections().transpose();
     }
+
+    // Construct again in parallel and check its the same
+    tf::Executor executor;
+    ChebAdaptive chebf2(f, a, b, epsAbs, epsRel, 0, executor);
+    EXPECT_EQ(chebf, chebf2);
 }
 
 TEST(ChebAdaptive, ConstructWithSections)
@@ -89,9 +99,9 @@ TEST(ChebAdaptive, ConstructWithSections)
     RealVector sections{
         {0, 0.35, 0.45, 3.5}
     };
-    Real epsAbs  = 0;
-    Real epsRel  = 1e-12;
-    Real hMin    = 0.01;
+    Real epsAbs = 0;
+    Real epsRel = 1e-12;
+    Real hMin   = 0.01;
     ChebAdaptive chebf(f, sections, epsAbs, epsRel, hMin, &ok);
 
     EXPECT_EQ(ok, true);
@@ -103,6 +113,11 @@ TEST(ChebAdaptive, ConstructWithSections)
             << "x =" << x << "f(x) =" << f(x) << "chebf.sections() =" << chebf.sections().transpose()
             << "chebf.numCoefficients() =" << chebf.numCoefficients().transpose();
     }
+
+    // Construct again in parallel and check its the same
+    tf::Executor executor;
+    ChebAdaptive chebf2(f, sections, epsAbs, epsRel, hMin, executor, &ok);
+    EXPECT_EQ(chebf, chebf2);
 }
 
 TEST(ChebAdaptive, ConstructMatrixFunction)
@@ -114,11 +129,11 @@ TEST(ChebAdaptive, ConstructMatrixFunction)
         };
     };
 
-    Real a       = 0;
-    Real b       = 1;
-    Real epsAbs  = 0;
-    Real epsRel  = 1e-12;
-    Real hMin    = 0.01;
+    Real a      = 0;
+    Real b      = 1;
+    Real epsAbs = 0;
+    Real epsRel = 1e-12;
+    Real hMin   = 0.01;
     ChebAdaptive chebf(f, a, b, epsAbs, epsRel, hMin);
 
     RealVector xValues = RealVector::LinSpaced(1000, a, b);
@@ -135,6 +150,11 @@ TEST(ChebAdaptive, ConstructMatrixFunction)
     {
         EXPECT_LT(maxNorm(f(x) - chebf(x)), 1e-12);
     }
+
+    // Construct again in parallel and check its the same
+    tf::Executor executor;
+    ChebAdaptive chebf2(f, a, b, epsAbs, epsRel, hMin, executor);
+    EXPECT_EQ(chebf, chebf2);
 }
 
 TEST(ChebAdaptive, ConstructFromPiecewiseChebs)
@@ -217,11 +237,11 @@ TEST(ChebAdaptive, Serialization)
         };
     };
 
-    Real a       = 0;
-    Real b       = 1;
-    Real epsAbs  = 0;
-    Real epsRel  = 1e-12;
-    Real hMin    = 0.01;
+    Real a      = 0;
+    Real b      = 1;
+    Real epsAbs = 0;
+    Real epsRel = 1e-12;
+    Real hMin   = 0.01;
     ChebAdaptive interpolation(f, a, b, epsAbs, epsRel, hMin);
 
     std::string archiveFilename = "chebAdaptive_test_out.cereal";
