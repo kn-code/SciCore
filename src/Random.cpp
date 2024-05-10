@@ -111,11 +111,4 @@ void Xoshiro256::longJump() noexcept
     s[3] = s3;
 }
 
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-template RealMatrix randomMatrix<RealMatrix, std::uniform_real_distribution<Real>, SciCore::Xoshiro256>(int, int, std::uniform_real_distribution<Real>&, SciCore::Xoshiro256&);
-template Matrix randomMatrix<Matrix, std::uniform_real_distribution<Real>, SciCore::Xoshiro256>(int, int, std::uniform_real_distribution<Real>&, SciCore::Xoshiro256&);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
-
 } // namespace SciCore

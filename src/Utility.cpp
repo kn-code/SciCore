@@ -9,15 +9,6 @@
 namespace SciCore
 {
 
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-template bool isFinite<RealVector>(const RealVector& );
-template bool isFinite<Vector>(const Vector& );
-template bool isFinite<RealMatrix>(const RealMatrix& );
-template bool isFinite<Matrix>(const Matrix& );
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
-
 Real relError(Real testValue, Real trueValue) noexcept
 {
     // includes the case trueValue==testValue==0

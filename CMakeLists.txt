@@ -24,12 +24,33 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_CXX_EXTENSIONS OFF)
     set(CMAKE_COLOR_DIAGNOSTICS ON)
 
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+    set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+    set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
+    if(NOT APPLE)
+        set(CMAKE_INSTALL_RPATH $ORIGIN)
+    endif()
+
+    # Useful for debugging/benchmarking are also -g -fno-omit-frame-pointer
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wnon-virtual-dtor -pedantic -Wcast-align -Wunused -Woverloaded-virtual -Wnull-dereference -Wdouble-promotion")
+    endif ()
+
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
     set(FETCHCONTENT_QUIET OFF)
 
     include(CTest)
 endif()
+
+#
+# Dependencies
+#
+
+# BLAS and LAPACK
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
 
 #
 # Eigen
@@ -39,6 +60,8 @@ find_package(Eigen3 3.4.0 QUIET)
 
 # If Eigen was not found use FetchContent to download it
 if(NOT Eigen3_FOUND)
+    message(STATUS "Eigen3 not found. Fetching from Git repository...")
+
     FetchContent_Declare(
         Eigen3
         GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
@@ -49,6 +72,9 @@ if(NOT Eigen3_FOUND)
         set(BUILD_TESTING OFF)
         FetchContent_MakeAvailable(Eigen3)
     endblock ()
+else()
+    # Print the found Eigen include directory
+    message(STATUS "Eigen3 found: ${EIGEN3_INCLUDE_DIR}")
 endif()
 
 #
@@ -92,10 +118,8 @@ endblock ()
 
 add_subdirectory(src)
 
-# Testing only available if this is the main app
-# Emergency override SCICORE_BUILD_TESTS provided as well
-if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR SCICORE_BUILD_TESTS)
-   AND BUILD_TESTING)
+# Testing only available if this is the main app and BUILD_TESTING is defined
+if((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME) AND BUILD_TESTING)
     add_subdirectory(tests EXCLUDE_FROM_ALL)
 endif()
 
@@ -106,7 +130,10 @@ endif()
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/SciCore)
+set(SciCore_INSTALL_CMAKEDIR
+    ${CMAKE_INSTALL_LIBDIR}/cmake/SciCore
+    CACHE STRING "Path to SciCore CMake files"
+)
 
 install(
     DIRECTORY include/
@@ -116,16 +143,21 @@ install(
 install(
     TARGETS SciCore cereal
     EXPORT SciCoreTargets
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT   SciCore_Runtime
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT   SciCore_Runtime
+        NAMELINK_COMPONENT SciCore_Development
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        COMPONENT SciCore_Development
 )
 
-install(
-    EXPORT SciCoreTargets
-    FILE SciCoreTargets.cmake
+install(EXPORT SciCoreTargets
+    DESTINATION ${SciCore_INSTALL_CMAKEDIR}
     NAMESPACE SciCore::
-    DESTINATION ${INSTALL_CONFIGDIR}
+    FILE SciCoreTargets.cmake
+    COMPONENT SciCore_Development
 )
 
 write_basic_package_version_file(
@@ -137,14 +169,14 @@ write_basic_package_version_file(
 configure_package_config_file(
     ${CMAKE_CURRENT_LIST_DIR}/Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/SciCoreConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+    INSTALL_DESTINATION ${SciCore_INSTALL_CMAKEDIR}
 )
 
 install(
     FILES
     ${CMAKE_CURRENT_BINARY_DIR}/SciCoreConfig.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/SciCoreConfigVersion.cmake
-    DESTINATION ${INSTALL_CONFIGDIR}
+    DESTINATION ${SciCore_INSTALL_CMAKEDIR}
 )
 
 install(

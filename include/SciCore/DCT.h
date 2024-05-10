@@ -14,6 +14,7 @@
 #define SCICORE_DCT_H
 
 #include "Definitions.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -313,7 +314,7 @@ void dct_16(T* data, T* buffer, int stride, int bufferStride)
 
 // buffer must have size bufferStride*N
 template <MatrixOrScalarType T>
-void dct(T* x, int N, T* buffer, int stride, int bufferStride)
+SCICORE_EXPORT void dct(T* x, int N, T* buffer, int stride, int bufferStride)
 {
     switch (N)
     {
@@ -386,42 +387,20 @@ void dct(T* x, int N, T* buffer, int stride, int bufferStride)
 /// \param      buffer  Buffer of at least length \a bufferStride*N.
 ///
 template <MatrixOrScalarType T>
-void dct(T* x, int N, T* buffer)
+SCICORE_EXPORT void dct(T* x, int N, T* buffer)
 {
     dct(x, N, buffer, 1, 1);
 }
-
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template void dct<Real>(Real*, int, Real*);
-extern template void dct<Complex>(Complex*, int, Complex*);
-extern template void dct<RealVector>(RealVector*, int, RealVector*);
-extern template void dct<Vector>(Vector*, int, Vector*);
-extern template void dct<RealMatrix>(RealMatrix*, int, RealMatrix*);
-extern template void dct<Matrix>(Matrix*, int, Matrix*);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
 
 ///
 /// \brief      Convenience version that automatically allocates the required buffer.
 ///
 template <MatrixOrScalarType T>
-void dct(T* x, int N)
+SCICORE_EXPORT void dct(T* x, int N)
 {
     std::vector<T> buffer(N);
     dct(x, N, buffer.data(), 1, 1);
 }
-
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template void dct<Real>(Real*, int);
-extern template void dct<Complex>(Complex*, int);
-extern template void dct<RealVector>(RealVector*, int);
-extern template void dct<Vector>(Vector*, int);
-extern template void dct<RealMatrix>(RealMatrix*, int);
-extern template void dct<Matrix>(Matrix*, int);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
 
 /// \} // end of DCT
 

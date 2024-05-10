@@ -19,6 +19,7 @@
 #include <cereal/types/map.hpp>
 
 #include "Cheb.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -58,7 +59,7 @@ namespace SciCore
 /// \headerfile ChebAdaptive.h <SciCore/ChebAdaptive.h>
 ///
 template <MatrixOrScalarType T>
-class ChebAdaptive
+class SCICORE_EXPORT ChebAdaptive
 {
   public:
     ///
@@ -703,15 +704,6 @@ ChebAdaptive(
     bool* ok,
     int nStart,
     int nTrip) -> ChebAdaptive<std::invoke_result_t<FunctionT, Real>>;
-
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template class ChebAdaptive<Real>;
-extern template class ChebAdaptive<Complex>;
-extern template class ChebAdaptive<RealVector>;
-extern template class ChebAdaptive<Vector>;
-extern template class ChebAdaptive<RealMatrix>;
-extern template class ChebAdaptive<Matrix>;
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
 
 } // namespace SciCore
 

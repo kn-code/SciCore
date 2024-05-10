@@ -18,6 +18,7 @@
 #include "ChebAdaptive.h"
 #include "Definitions.h"
 #include "Integration.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -35,7 +36,7 @@ namespace Detail
 // \tparam VectorT            A \a Real or \a Complex vector type.
 //
 template <MatrixOrScalarType T>
-Eigen::Matrix<typename GetScalarType<T>::type, Eigen::Dynamic, Eigen::Dynamic> convolutionMatrix(
+SCICORE_EXPORT Eigen::Matrix<typename GetScalarType<T>::type, Eigen::Dynamic, Eigen::Dynamic> convolutionMatrix(
     const std::vector<T>& chebCoefficients,
     Real tMax_minus_t0)
 {
@@ -362,7 +363,7 @@ Cheb<T> convolution(const Cheb<T1>& k, const Cheb<T2>& f)
 /// @tparam TKernel     Type of the memory kernel.
 ///
 template <MatrixOrScalarType TSolution, MatrixOrScalarType TKernel>
-Cheb<TSolution> solveIdeCheb(
+SCICORE_EXPORT Cheb<TSolution> solveIdeCheb(
     const TKernel& g,
     const Cheb<TKernel>& k,
     const Cheb<TSolution>& h,
@@ -497,7 +498,7 @@ Cheb<TSolution> solveIdeCheb(
 /// @brief      Convenience version without inhomogeneous part.
 ///
 template <MatrixOrScalarType TSolution, MatrixOrScalarType TKernel>
-Cheb<TSolution> solveIdeCheb(
+SCICORE_EXPORT Cheb<TSolution> solveIdeCheb(
     const TKernel& g,
     const Cheb<TKernel>& k,
     const TSolution& y0,
@@ -551,7 +552,7 @@ Cheb<TSolution> solveIdeCheb(
 /// @tparam TKernel     Type of the memory kernel.
 ///
 template <MatrixOrScalarType TSolution, MatrixOrScalarType TKernel>
-ChebAdaptive<TSolution> solveIdeCheb(
+SCICORE_EXPORT ChebAdaptive<TSolution> solveIdeCheb(
     const TKernel& g,
     const ChebAdaptive<TKernel>& k,
     const TSolution& y0,
@@ -672,7 +673,7 @@ namespace Detail
 {
 
 template <MatrixType T>
-Cheb<T> solveIdeChebMatrixValued(
+SCICORE_EXPORT Cheb<T> solveIdeChebMatrixValued(
     const T& g,
     const Cheb<T>& k,
     const Cheb<T>& h,
@@ -774,7 +775,7 @@ Cheb<T> solveIdeChebMatrixValued(
 /// @tparam T           Type of a quadratic matrix.
 ///
 template <MatrixType T>
-Cheb<T> computePropagatorIde(const T& g, const Cheb<T>& k, Real t0, Real tMax, int nMinCheb)
+SCICORE_EXPORT Cheb<T> computePropagatorIde(const T& g, const Cheb<T>& k, Real t0, Real tMax, int nMinCheb)
 {
     int r = g.rows();
     int c = g.cols();
@@ -815,7 +816,7 @@ Cheb<T> computePropagatorIde(const T& g, const Cheb<T>& k, Real t0, Real tMax, i
 /// @tparam T           Type of a quadratic matrix.
 ///
 template <MatrixType T>
-ChebAdaptive<T> computePropagatorIde(
+SCICORE_EXPORT ChebAdaptive<T> computePropagatorIde(
     const T& g,
     const ChebAdaptive<T>& k,
     Real t0,

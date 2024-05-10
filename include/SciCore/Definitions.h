@@ -26,6 +26,8 @@
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
 
+#include "SciCore_export.h"
+
 namespace SciCore
 {
 
@@ -100,56 +102,56 @@ using StaticMatrix = Eigen::Matrix<Complex, m, n>;
 
 // Type trait determining whether _T_ is a scalar type.
 template <typename T>
-struct IsScalar
+struct SCICORE_EXPORT IsScalar
 {
     constexpr static bool value = std::is_same_v<std::decay_t<T>, Real> || std::is_same_v<std::decay_t<T>, Complex>;
 };
 
 // Type trait determining whether _T_ is a dense matrix type. Use as IsDenseMatrix<int>::value
 template <typename T>
-struct IsDenseMatrix : std::is_base_of<Eigen::DenseBase<std::decay_t<T>>, std::decay_t<T>>
+struct SCICORE_EXPORT IsDenseMatrix : std::is_base_of<Eigen::DenseBase<std::decay_t<T>>, std::decay_t<T>>
 {
 };
 
 // Use like IsSparseMatrix<int>::value
 template <typename T>
-struct IsSparseMatrix : std::is_base_of<Eigen::SparseMatrixBase<std::decay_t<T>>, std::decay_t<T>>
+struct SCICORE_EXPORT IsSparseMatrix : std::is_base_of<Eigen::SparseMatrixBase<std::decay_t<T>>, std::decay_t<T>>
 {
 };
 
 template <typename T>
-struct IsMatrix
+struct SCICORE_EXPORT IsMatrix
 {
     constexpr static bool value = IsDenseMatrix<std::decay_t<T>>::value || IsSparseMatrix<std::decay_t<T>>::value;
 };
 
 template <typename T>
-struct IsMatrixOrScalar
+struct SCICORE_EXPORT IsMatrixOrScalar
 {
     constexpr static bool value = IsMatrix<std::decay_t<T>>::value || std::is_same_v<std::decay_t<T>, Real> ||
                                   std::is_same_v<std::decay_t<T>, Complex>;
 };
 
 template <typename T>
-struct IsRealMatrix
+struct SCICORE_EXPORT IsRealMatrix
 {
     constexpr static bool value =
         IsMatrix<T>::value && (std::is_same_v<typename T::Scalar, float> || std::is_same_v<typename T::Scalar, double>);
 };
 
 template <typename T>
-struct IsComplexMatrix
+struct SCICORE_EXPORT IsComplexMatrix
 {
     constexpr static bool value = IsMatrix<T>::value && std::is_same_v<typename T::Scalar, Complex>;
 };
 
 template <typename T>
-struct IsStdVector : std::false_type
+struct SCICORE_EXPORT IsStdVector : std::false_type
 {
 };
 
 template <typename T, typename A>
-struct IsStdVector<std::vector<T, A>> : std::true_type
+struct SCICORE_EXPORT IsStdVector<std::vector<T, A>> : std::true_type
 {
 };
 
@@ -157,31 +159,31 @@ template <typename T>
 inline constexpr bool IsStdVector_v = IsStdVector<T>::value;
 
 template <typename T>
-struct GetScalarType
+struct SCICORE_EXPORT GetScalarType
 {
     using type = typename T::Scalar;
 };
 
 template <>
-struct GetScalarType<float>
+struct SCICORE_EXPORT GetScalarType<float>
 {
     using type = float;
 };
 
 template <>
-struct GetScalarType<double>
+struct SCICORE_EXPORT GetScalarType<double>
 {
     using type = double;
 };
 
 template <>
-struct GetScalarType<std::complex<float>>
+struct SCICORE_EXPORT GetScalarType<std::complex<float>>
 {
     using type = std::complex<float>;
 };
 
 template <>
-struct GetScalarType<std::complex<double>>
+struct SCICORE_EXPORT GetScalarType<std::complex<double>>
 {
     using type = std::complex<double>;
 };

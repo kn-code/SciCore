@@ -17,18 +17,25 @@ set(HEADER_LIST
   "${SciCore_SOURCE_DIR}/include/SciCore/extern/FunctionTraits.h"
 )
 
-add_library(SciCore
+add_library(SciCore SHARED
     BasicMath.cpp
     Cheb.cpp
-    Cheb2.cpp
-    ChebAdaptive.cpp
-    DCT.cpp
-    DCT2.cpp
     Random.cpp
     Utility.cpp
     ${HEADER_LIST})
 add_library(SciCore::SciCore ALIAS SciCore)
 
+set_target_properties(SciCore PROPERTIES
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+    VERSION ${PROJECT_VERSION}
+)
+
+include(GenerateExportHeader)
+generate_export_header(SciCore
+    EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/../include/SciCore/SciCore_export.h
+)
+
+target_link_libraries(SciCore PRIVATE BLAS::BLAS LAPACK::LAPACK)
 target_link_libraries(SciCore PUBLIC Eigen3::Eigen cereal::cereal Taskflow)
 
 target_include_directories(SciCore PUBLIC
@@ -37,10 +44,7 @@ target_include_directories(SciCore PUBLIC
 )
 
 target_compile_features(SciCore PUBLIC cxx_std_20)
-target_compile_options(SciCore PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra>
-    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
-)
+
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     # Every app/lib using SciCore needs to be build for the same architecture,
     # otherwise there can be segfaults using the Eigen library.

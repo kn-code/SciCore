@@ -15,6 +15,7 @@
 
 #include "DCT.h"
 #include "Parallel.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -43,7 +44,7 @@ namespace SciCore
 /// \tparam     StorageOrder    Either \a Eigen::StorageOptions::ColMajor or \a Eigen::StorageOptions::RowMajor.
 ///
 template <MatrixOrScalarType T, int StorageOrder = Eigen::StorageOptions::ColMajor>
-void dct2(T* x, int N, int M, T* buffer)
+SCICORE_EXPORT void dct2(T* x, int N, int M, T* buffer)
 {
     if constexpr (StorageOrder == Eigen::StorageOptions::RowMajor)
     {
@@ -91,29 +92,11 @@ void dct2(T* x, int N, int M, T* buffer)
 /// \brief      Convenience version that automatically allocates the required buffer.
 ///
 template <MatrixOrScalarType T, int StorageOrder = Eigen::StorageOptions::ColMajor>
-void dct2(T* x, int N, int M)
+SCICORE_EXPORT void dct2(T* x, int N, int M)
 {
     std::vector<T> buffer(std::max(N, M));
     dct2<T, StorageOrder>(x, N, M, buffer.data());
 }
-
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template void dct2<Real, Eigen::StorageOptions::ColMajor>(Real*, int, int);
-extern template void dct2<Complex, Eigen::StorageOptions::ColMajor>(Complex*, int, int);
-extern template void dct2<RealVector, Eigen::StorageOptions::ColMajor>(RealVector*, int, int);
-extern template void dct2<Vector, Eigen::StorageOptions::ColMajor>(Vector*, int, int);
-extern template void dct2<RealMatrix, Eigen::StorageOptions::ColMajor>(RealMatrix*, int, int);
-extern template void dct2<Matrix, Eigen::StorageOptions::ColMajor>(Matrix*, int, int);
-
-extern template void dct2<Real, Eigen::StorageOptions::RowMajor>(Real*, int, int);
-extern template void dct2<Complex, Eigen::StorageOptions::RowMajor>(Complex*, int, int);
-extern template void dct2<RealVector, Eigen::StorageOptions::RowMajor>(RealVector*, int, int);
-extern template void dct2<Vector, Eigen::StorageOptions::RowMajor>(Vector*, int, int);
-extern template void dct2<RealMatrix, Eigen::StorageOptions::RowMajor>(RealMatrix*, int, int);
-extern template void dct2<Matrix, Eigen::StorageOptions::RowMajor>(Matrix*, int, int);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
 
 ///
 /// \ingroup DCT
@@ -131,7 +114,7 @@ extern template void dct2<Matrix, Eigen::StorageOptions::RowMajor>(Matrix*, int,
 /// \tparam     StorageOrder    Either \a Eigen::StorageOptions::ColMajor or \a Eigen::StorageOptions::RowMajor.
 ///
 template <MatrixOrScalarType T, int StorageOrder = Eigen::StorageOptions::ColMajor>
-void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
+SCICORE_EXPORT void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
 {
     if constexpr (StorageOrder == Eigen::StorageOptions::RowMajor)
     {
@@ -182,24 +165,6 @@ void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
         static_assert(sizeof(T) + 1 == 0, "Invalid storage order");
     }
 }
-
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template void dct2Parallel<Real, Eigen::StorageOptions::ColMajor>(Real*, int, int, tf::Executor&);
-extern template void dct2Parallel<Complex, Eigen::StorageOptions::ColMajor>(Complex*, int, int, tf::Executor&);
-extern template void dct2Parallel<RealVector, Eigen::StorageOptions::ColMajor>(RealVector*, int, int, tf::Executor&);
-extern template void dct2Parallel<Vector, Eigen::StorageOptions::ColMajor>(Vector*, int, int, tf::Executor&);
-extern template void dct2Parallel<RealMatrix, Eigen::StorageOptions::ColMajor>(RealMatrix*, int, int, tf::Executor&);
-extern template void dct2Parallel<Matrix, Eigen::StorageOptions::ColMajor>(Matrix*, int, int, tf::Executor&);
-
-extern template void dct2Parallel<Real, Eigen::StorageOptions::RowMajor>(Real*, int, int, tf::Executor&);
-extern template void dct2Parallel<Complex, Eigen::StorageOptions::RowMajor>(Complex*, int, int, tf::Executor&);
-extern template void dct2Parallel<RealVector, Eigen::StorageOptions::RowMajor>(RealVector*, int, int, tf::Executor&);
-extern template void dct2Parallel<Vector, Eigen::StorageOptions::RowMajor>(Vector*, int, int, tf::Executor&);
-extern template void dct2Parallel<RealMatrix, Eigen::StorageOptions::RowMajor>(RealMatrix*, int, int, tf::Executor&);
-extern template void dct2Parallel<Matrix, Eigen::StorageOptions::RowMajor>(Matrix*, int, int, tf::Executor&);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
 
 /// \} // end of DCT
 

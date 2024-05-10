@@ -16,6 +16,7 @@
 #include <random>
 
 #include "Definitions.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -44,7 +45,7 @@ uint64_t splitMix64(uint64_t x) noexcept;
 ///
 /// \headerfile Random.h <SciCore/Random.h>
 ///
-class Xoshiro256
+class SCICORE_EXPORT Xoshiro256
 {
 
   public:
@@ -134,7 +135,7 @@ class Xoshiro256
 /// \param      rnd          The random number generator, for example Xoshiro256.
 ///
 template <DenseMatrixType MatrixT, typename RandomDistT, typename RandomGenT>
-MatrixT randomMatrix(int rows, int columns, RandomDistT& dis, RandomGenT& rnd)
+SCICORE_EXPORT MatrixT randomMatrix(int rows, int columns, RandomDistT& dis, RandomGenT& rnd)
 {
     MatrixT returnValue(rows, columns);
     for (int j = 0; j < returnValue.cols(); ++j)
@@ -155,13 +156,6 @@ MatrixT randomMatrix(int rows, int columns, RandomDistT& dis, RandomGenT& rnd)
     return returnValue;
 }
 
-// clang-format off
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template RealMatrix randomMatrix<RealMatrix, std::uniform_real_distribution<Real>, SciCore::Xoshiro256>(int, int, std::uniform_real_distribution<Real>&, SciCore::Xoshiro256&);
-extern template Matrix randomMatrix<Matrix, std::uniform_real_distribution<Real>, SciCore::Xoshiro256>(int, int, std::uniform_real_distribution<Real>&, SciCore::Xoshiro256&);
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-// clang-format on
-
 ///
 /// \brief      Returns a randomly filled vector.
 ///
@@ -173,7 +167,7 @@ extern template Matrix randomMatrix<Matrix, std::uniform_real_distribution<Real>
 /// \param      rnd          The random number generator, for example Xoshiro256.
 ///
 template <DenseMatrixType VectorT, typename RandomDistT, typename RandomGenT>
-inline VectorT randomVector(int size, RandomDistT& dis, RandomGenT& rnd)
+SCICORE_EXPORT VectorT randomVector(int size, RandomDistT& dis, RandomGenT& rnd)
 {
     static_assert(VectorT::RowsAtCompileTime == 1 || VectorT::ColsAtCompileTime == 1, "Invalid vector type.");
     if constexpr (VectorT::RowsAtCompileTime == 1)

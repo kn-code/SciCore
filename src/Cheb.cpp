@@ -28,13 +28,4 @@ RealVector chebNodes(Real a, Real b, int n)
     return returnValue;
 }
 
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-template class Cheb<Real>;
-template class Cheb<Complex>;
-template class Cheb<RealVector>;
-template class Cheb<Vector>;
-template class Cheb<RealMatrix>;
-template class Cheb<Matrix>;
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
-
 } // namespace SciCore

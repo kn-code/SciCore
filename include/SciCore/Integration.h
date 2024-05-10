@@ -22,6 +22,7 @@
 #include "Definitions.h"
 #include "extern/FunctionTraits.h"
 #include "IntegrationWeights.h"
+#include "SciCore_export.h"
 #include "Utility.h"
 
 namespace SciCore
@@ -94,7 +95,7 @@ T integrateAdaptiveWorker_15(const T* fVals, typename SciCore::Detail::Integrati
 //
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrateAdaptive(FunctionT&& f, RealVector& sections, Real epsAbs, Real epsRel, Real hMin = 1e-4)
+SCICORE_EXPORT auto integrateAdaptive(FunctionT&& f, RealVector& sections, Real epsAbs, Real epsRel, Real hMin = 1e-4)
 {
     using ReturnType = typename std::invoke_result_t<FunctionT, Real>;
     using ErrorType  = typename SciCore::Detail::IntegrationErrorType<ReturnType>::type;
@@ -324,7 +325,7 @@ auto integrateAdaptive(FunctionT&& f, RealVector& sections, Real epsAbs, Real ep
 ///
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrateAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin = 1e-4)
+SCICORE_EXPORT auto integrateAdaptive(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Real hMin = 1e-4)
 {
     RealVector sections{
         {a, b}
@@ -340,7 +341,7 @@ enum SingularityType
 
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real, Real>
-auto integrateDE(FunctionT&& f, Real epsAbs, Real epsRel, SingularityType s)
+SCICORE_EXPORT auto integrateDE(FunctionT&& f, Real epsAbs, Real epsRel, SingularityType s)
 {
     using ReturnType = typename std::invoke_result_t<FunctionT, Real, Real>;
 
@@ -422,7 +423,7 @@ auto integrateDE(FunctionT&& f, Real epsAbs, Real epsRel, SingularityType s)
 /// \param      s           Type of singularity.
 ///
 template <typename FunctionT>
-auto integrateDE(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, SingularityType s = SingularityType::Mild)
+SCICORE_EXPORT auto integrateDE(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, SingularityType s = SingularityType::Mild)
 {
     using FuncTraits = StdExt::FunctionTraits<FunctionT>;
     using ReturnType = typename FuncTraits::ReturnType;
@@ -464,7 +465,7 @@ auto integrateDE(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, Singul
 ///
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrate0ToInfDE(
+SCICORE_EXPORT auto integrate0ToInfDE(
     FunctionT&& f,
     Real epsAbs,
     Real epsRel,
@@ -510,7 +511,7 @@ auto integrate0ToInfDE(
 ///
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrate0ToInfDEDecaying(
+SCICORE_EXPORT auto integrate0ToInfDEDecaying(
     FunctionT&& f,
     Real epsAbs,
     Real epsRel,
@@ -548,7 +549,7 @@ auto integrate0ToInfDEDecaying(
 
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrateToInfDEDecaying(
+SCICORE_EXPORT auto integrateToInfDEDecaying(
     FunctionT&& f,
     Real a,
     Real epsAbs,
@@ -565,7 +566,7 @@ auto integrateToInfDEDecaying(
 }
 
 template <class ResultT>
-struct TrapezoidIntegrator
+struct SCICORE_EXPORT TrapezoidIntegrator
 {
     Real a;
     Real b;
@@ -666,7 +667,7 @@ struct TrapezoidIntegrator
 ///
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real>
-auto integrateTrapezoid(
+SCICORE_EXPORT auto integrateTrapezoid(
     FunctionT&& f,
     Real a,
     Real b,
@@ -879,7 +880,7 @@ auto integrateRectangleAdaptiveWorker_21(
 ///
 template <typename FunctionT>
     requires std::invocable<FunctionT, Real, Real>
-auto integrate2DAdaptive(FunctionT&& f, StaticRealVector<2> lower, StaticRealVector<2> upper, Real epsAbs, Real epsRel)
+SCICORE_EXPORT auto integrate2DAdaptive(FunctionT&& f, StaticRealVector<2> lower, StaticRealVector<2> upper, Real epsAbs, Real epsRel)
 {
     using ReturnType = typename std::invoke_result_t<FunctionT, Real, Real>;
     using ErrorType  = typename SciCore::Detail::IntegrationErrorType<ReturnType>::type;

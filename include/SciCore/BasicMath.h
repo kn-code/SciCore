@@ -14,6 +14,7 @@
 #define SCICORE_BASIC_MATH_H
 
 #include "Definitions.h"
+#include "SciCore_export.h"
 
 namespace SciCore
 {
@@ -21,17 +22,17 @@ namespace SciCore
 ///
 /// \brief      Wraps the angle _angle_ into the range \f$[0, 2\pi)\f$.
 ///
-Real wrapAngle(Real angle);
+SCICORE_EXPORT Real wrapAngle(Real angle);
 
 ///
 /// \brief      Computes \f$\cos(x)-1\f$ in a numerically stable way for small \f$x\f$.
 ///
-Real cosm1(Real x);
+SCICORE_EXPORT Real cosm1(Real x);
 
 ///
 /// \brief      Computes \f$\exp(z)-1\f$ in a numerically stable way for small complex \f$z\f$.
 ///
-Complex expm1(Complex z);
+SCICORE_EXPORT Complex expm1(Complex z);
 
 } // namespace SciCore
 

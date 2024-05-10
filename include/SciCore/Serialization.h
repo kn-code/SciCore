@@ -8,6 +8,7 @@
 #define SCICORE_SERIALIZATION_H
 
 #include "Definitions.h"
+#include "SciCore_export.h"
 
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>
@@ -23,7 +24,7 @@ namespace SciCore::Detail
 // The reason not to use the default implementation is that it saves
 // every complex number with a named "real" and "imag" field, which
 // leads to a large size overhead for complex matrices.
-struct WrappedComplex
+struct SCICORE_EXPORT WrappedComplex
 {
     Complex c;
 };
@@ -33,7 +34,7 @@ namespace cereal
 {
 
 template <typename Archive, traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void save(Archive& archive, const SciCore::Detail::WrappedComplex& x)
+SCICORE_EXPORT void save(Archive& archive, const SciCore::Detail::WrappedComplex& x)
 {
     cereal::size_type s = 2;
     archive(cereal::make_size_tag(s));
@@ -41,7 +42,7 @@ void save(Archive& archive, const SciCore::Detail::WrappedComplex& x)
 }
 
 template <typename Archive, traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void load(Archive& archive, SciCore::Detail::WrappedComplex& x)
+SCICORE_EXPORT void load(Archive& archive, SciCore::Detail::WrappedComplex& x)
 {
     cereal::size_type s;
     archive(cereal::make_size_tag(s));
@@ -57,7 +58,7 @@ void load(Archive& archive, SciCore::Detail::WrappedComplex& x)
 
 // std::vector<Complex> -- text archive
 template <typename Archive, traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void save(Archive& archive, const std::vector<SciCore::Complex>& x)
+SCICORE_EXPORT void save(Archive& archive, const std::vector<SciCore::Complex>& x)
 {
     cereal::size_type s = x.size();
     archive(cereal::make_size_tag(s));
@@ -70,7 +71,7 @@ void save(Archive& archive, const std::vector<SciCore::Complex>& x)
 }
 
 template <typename Archive, traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void load(Archive& archive, std::vector<SciCore::Complex>& x)
+SCICORE_EXPORT void load(Archive& archive, std::vector<SciCore::Complex>& x)
 {
     cereal::size_type s;
     archive(cereal::make_size_tag(s));
@@ -87,7 +88,7 @@ void load(Archive& archive, std::vector<SciCore::Complex>& x)
 
 // std::vector<Complex> -- binary archive
 template <typename Archive, traits::EnableIf<traits::is_output_serializable<BinaryData<SciCore::Complex>, Archive>::value> = traits::sfinae>
-void save(Archive& archive, const std::vector<SciCore::Complex>& x)
+SCICORE_EXPORT void save(Archive& archive, const std::vector<SciCore::Complex>& x)
 {
     size_t size = x.size();
     archive(size);
@@ -95,7 +96,7 @@ void save(Archive& archive, const std::vector<SciCore::Complex>& x)
 }
 
 template <typename Archive, traits::EnableIf<traits::is_input_serializable<BinaryData<SciCore::Complex>, Archive>::value> = traits::sfinae>
-void load(Archive& archive, std::vector<SciCore::Complex>& x)
+SCICORE_EXPORT void load(Archive& archive, std::vector<SciCore::Complex>& x)
 {
     size_t size;
     archive(size);
@@ -114,7 +115,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, 1, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, 1, _Options, _MaxRows, _MaxCols>& m)
 {
     cereal::size_type s = m.rows();
     archive(cereal::make_size_tag(s));
@@ -141,7 +142,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, 1, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, 1, _Options, _MaxRows, _MaxCols>& m)
 {
     cereal::size_type s;
     archive(cereal::make_size_tag(s));
@@ -172,7 +173,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void save(Archive& archive, const Eigen::Matrix<_Scalar, 1, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void save(Archive& archive, const Eigen::Matrix<_Scalar, 1, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     cereal::size_type s = m.cols();
     archive(cereal::make_size_tag(s));
@@ -199,7 +200,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
-void load(Archive& archive, Eigen::Matrix<_Scalar, 1, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void load(Archive& archive, Eigen::Matrix<_Scalar, 1, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     cereal::size_type s;
     archive(cereal::make_size_tag(s));
@@ -232,7 +233,7 @@ template <
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
     requires(_Rows != 1 || _Cols != 1)
-void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     int rows = m.rows();
 
@@ -254,7 +255,7 @@ template <
     int _MaxCols,
     traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae>
     requires(_Rows != 1 || _Cols != 1)
-void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     size_t rows;
     archive(cereal::make_size_tag(rows));
@@ -295,7 +296,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_output_serializable<BinaryData<_Scalar>, Archive>::value> = traits::sfinae>
-void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void save(Archive& archive, const Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     int rows = m.rows();
     int cols = m.cols();
@@ -313,7 +314,7 @@ template <
     int _MaxRows,
     int _MaxCols,
     traits::EnableIf<traits::is_input_serializable<BinaryData<_Scalar>, Archive>::value> = traits::sfinae>
-void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
+SCICORE_EXPORT void load(Archive& archive, Eigen::Matrix<_Scalar, _Rows, _Cols, _Options, _MaxRows, _MaxCols>& m)
 {
     int rows;
     int cols;

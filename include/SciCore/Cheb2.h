@@ -15,6 +15,7 @@
 #include "DCT2.h"
 #include "Parallel.h"
 #include "Utility.h"
+#include "SciCore_export.h"
 #include "Serialization.h"
 
 namespace SciCore {
@@ -32,7 +33,7 @@ namespace SciCore {
 /// \headerfile Cheb2.h <SciCore/Cheb2.h>
 ///
 template <MatrixOrScalarType T>
-class Cheb2
+class SCICORE_EXPORT Cheb2
 {
 public:
 
@@ -553,15 +554,6 @@ Cheb2(FunctionT&& f, StaticRealVector<2> lower, StaticRealVector<2> upper, Stati
 template <typename FunctionT>
 Cheb2(FunctionT&& f, StaticRealVector<2> lower, StaticRealVector<2> upper, StaticIntVector<2> n, tf::Executor& executor)
     -> Cheb2<std::invoke_result_t<FunctionT, Real, Real>>;
-
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template class Cheb2<Real>;
-extern template class Cheb2<Complex>;
-extern template class Cheb2<RealVector>;
-extern template class Cheb2<Vector>;
-extern template class Cheb2<RealMatrix>;
-extern template class Cheb2<Matrix>;
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
 
 } // namespace SciCore
 

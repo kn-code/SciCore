@@ -18,6 +18,7 @@
 #include "DCT.h"
 #include "Definitions.h"
 #include "Parallel.h"
+#include "SciCore_export.h"
 #include "Serialization.h"
 #include "Utility.h"
 
@@ -44,7 +45,7 @@ namespace SciCore
 ///  \param  n          Number of Chebyshev nodes.
 ///  \param  nodes      A pointer to an array containing at least _n_ elements into which the result is written.
 ///
-void chebNodes(Real a, Real b, int n, Real* nodes) noexcept;
+SCICORE_EXPORT void chebNodes(Real a, Real b, int n, Real* nodes) noexcept;
 
 ///
 ///  \brief Computes _n_ Chebyshev nodes between _a_ and _b_ and returns the result.
@@ -55,13 +56,13 @@ void chebNodes(Real a, Real b, int n, Real* nodes) noexcept;
 ///  \param  b          Upper interval point.
 ///  \param  n          Number of Chebyshev nodes.
 ///
-RealVector chebNodes(Real a, Real b, int n);
+SCICORE_EXPORT RealVector chebNodes(Real a, Real b, int n);
 
 namespace Detail
 {
 
 template <MatrixOrScalarType T>
-T chebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
+SCICORE_EXPORT T chebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
 {
     assert(length > 0);
 
@@ -109,7 +110,7 @@ T chebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
 // Inst. Math. Appl., 20 (1977), pp. 379-391.
 //? Example where this really happens?
 template <MatrixOrScalarType T>
-T modifiedChebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
+SCICORE_EXPORT T modifiedChebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
 {
     assert(length > 0);
 
@@ -164,7 +165,7 @@ T modifiedChebyshevClenshawRecurrence(const T* c, int length, Real x) noexcept
 }
 
 template <MatrixOrScalarType T>
-int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
+SCICORE_EXPORT int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
 {
     // Enforce minimum size
     constexpr int minSize = 4;
@@ -198,7 +199,7 @@ int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
 
 // http://arxiv.org/abs/1512.01803
 template <MatrixOrScalarType T>
-int chopChebSeriesRelative(const T* c, int N, Real epsRel)
+SCICORE_EXPORT int chopChebSeriesRelative(const T* c, int N, Real epsRel)
 {
     assert(N > 0);
 
@@ -329,7 +330,7 @@ int chopChebSeriesRelative(const T* c, int N, Real epsRel)
 /// \headerfile Cheb.h <SciCore/Cheb.h>
 ///
 template <MatrixOrScalarType T>
-class Cheb
+class SCICORE_EXPORT Cheb
 {
   public:
     ///
@@ -1073,15 +1074,6 @@ Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, tf::Executor&, int
 template <typename FunctionT>
 Cheb(FunctionT&& f, Real a, Real b, Real epsAbs, Real epsRel, tf::Executor&, int nStart, int nTrip, bool* ok)
     -> Cheb<std::invoke_result_t<FunctionT, Real>>;
-
-#ifndef SCICORE_DONT_PRECOMPILE_TEMPLATES
-extern template class Cheb<Real>;
-extern template class Cheb<Complex>;
-extern template class Cheb<RealVector>;
-extern template class Cheb<Vector>;
-extern template class Cheb<RealMatrix>;
-extern template class Cheb<Matrix>;
-#endif // SCICORE_DONT_PRECOMPILE_TEMPLATES
 
 /// \} // end of Interpolation
 
