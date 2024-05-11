@@ -997,7 +997,7 @@ class SCICORE_EXPORT Cheb
                 Real y      = std::cos(std::numbers::pi_v<Real> * (j + Real(0.5)) * inv_n);
                 newCoeff[j] = (2 * inv_n) * f(std::fma(y, bma, bpa));
             },
-            0, n, n, executor);
+            0, n, executor);
 
         _coeffs = newCoeff;
         dct(_coeffs.data(), n, buffer);
@@ -1033,7 +1033,7 @@ class SCICORE_EXPORT Cheb
                         newCoeff[j] = (2 * inv_n) * f(std::fma(y, bma, bpa));
                     }
                 },
-                1, n, n, executor);
+                1, n, executor);
 
             _coeffs = newCoeff;
             dct(_coeffs.data(), n, buffer);

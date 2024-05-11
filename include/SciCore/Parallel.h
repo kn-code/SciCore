@@ -8,6 +8,7 @@
 #define SCICORE_PARALLEL_H
 
 #include <concepts>
+#include <limits>
 
 #include <taskflow/taskflow.hpp>
 
@@ -19,7 +20,12 @@ namespace SciCore
 
 template <typename FunctionT>
     requires std::invocable<FunctionT, int>
-SCICORE_EXPORT void parallelFor(FunctionT&& f, int begin, int end, int nChunks, tf::Executor& executor)
+SCICORE_EXPORT void parallelFor(
+    FunctionT&& f,
+    int begin,
+    int end,
+    tf::Executor& executor,
+    int nChunks = std::numeric_limits<int>::max())
 {
     if (nChunks <= 1 || executor.num_workers() <= 1)
     {
@@ -67,7 +73,12 @@ SCICORE_EXPORT void parallelFor(FunctionT&& f, int begin, int end, int nChunks, 
 
 template <typename FunctionT>
     requires std::invocable<FunctionT, int>
-SCICORE_EXPORT auto parallelSum(FunctionT&& f, int begin, int end, int nChunks, tf::Executor& executor)
+SCICORE_EXPORT auto parallelSum(
+    FunctionT&& f,
+    int begin,
+    int end,
+    tf::Executor& executor,
+    int nChunks = std::numeric_limits<int>::max())
 {
 #ifdef __cpp_lib_hardware_interference_size
     using std::hardware_constructive_interference_size;

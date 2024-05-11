@@ -533,7 +533,7 @@ private:
                 {
                     _c[i*_n[1] + j] = f(cos(pi*(i+0.5)/_n[0])*bma1 + bpa1, cos(pi*(j+0.5)/_n[1])*bma2 + bpa2);
                 }
-            }, 0, _n[0], executor.num_workers(), executor);
+            }, 0, _n[0], executor);
 
         dct2Parallel<T, Eigen::StorageOptions::RowMajor>(_c.data(), _n[0], _n[1], executor);
 

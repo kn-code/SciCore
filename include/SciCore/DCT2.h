@@ -126,7 +126,7 @@ SCICORE_EXPORT void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
                 std::vector<T> buffer(M);
                 dct(start, M, buffer.data(), 1, 1);
             },
-            0, N, executor.num_workers(), executor);
+            0, N, executor, executor.num_workers());
 
         parallelFor(
             [x, M, N](int i)
@@ -136,7 +136,7 @@ SCICORE_EXPORT void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
                 std::vector<T> buffer(N);
                 dct(start, N, buffer.data(), M, 1);
             },
-            0, M, executor.num_workers(), executor);
+            0, M, executor, executor.num_workers());
     }
     else if constexpr (StorageOrder == Eigen::StorageOptions::ColMajor)
     {
@@ -148,7 +148,7 @@ SCICORE_EXPORT void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
                 std::vector<T> buffer(M);
                 dct(start, M, buffer.data(), N, 1);
             },
-            0, N, executor.num_workers(), executor);
+            0, N, executor, executor.num_workers());
 
         parallelFor(
             [x, N](int i)
@@ -158,7 +158,7 @@ SCICORE_EXPORT void dct2Parallel(T* x, int N, int M, tf::Executor& executor)
                 std::vector<T> buffer(N);
                 dct(start, N, buffer.data(), 1, 1);
             },
-            0, M, executor.num_workers(), executor);
+            0, M, executor, executor.num_workers());
     }
     else
     {
