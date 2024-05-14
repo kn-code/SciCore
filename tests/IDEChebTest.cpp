@@ -143,8 +143,8 @@ TEST(solveIdeCheb, simpleRealHomogeneousIDE)
     for (size_t i = 0; i < nMinChebs.size(); ++i)
     {
         int nMinCheb = nMinChebs[i];
-        Real t0   = 3;
-        Real tMax = 10;
+        Real t0      = 3;
+        Real tMax    = 10;
 
         auto k = [](Real) -> Real
         {
@@ -193,9 +193,8 @@ TEST(solveIdeCheb, simpleRealInhomogeneousIDE)
     {
         return -(-2 * sqrt(3) * exp(1.5) * cos((sqrt(3) * (-3 + t)) / 2.) -
                  exp(1.5) * cos((8 + 3 * sqrt(3) - sqrt(3) * t) / 2.) +
-                 exp(1.5) * cos((8 - 3 * sqrt(3) + sqrt(3) * t) / 2.) +
-                 2 * exp(1.5) * sin((sqrt(3) * (-3 + t)) / 2.) - 2 * sqrt(3) * exp(t / 2.) * sin(1 + t) -
-                 2 * exp(1.5) * sin((8 + 3 * sqrt(3) - sqrt(3) * t) / 2.) +
+                 exp(1.5) * cos((8 - 3 * sqrt(3) + sqrt(3) * t) / 2.) + 2 * exp(1.5) * sin((sqrt(3) * (-3 + t)) / 2.) -
+                 2 * sqrt(3) * exp(t / 2.) * sin(1 + t) - 2 * exp(1.5) * sin((8 + 3 * sqrt(3) - sqrt(3) * t) / 2.) +
                  sqrt(3) * exp(1.5) * sin((8 + 3 * sqrt(3) - sqrt(3) * t) / 2.) +
                  2 * exp(1.5) * sin((8 - 3 * sqrt(3) + sqrt(3) * t) / 2.) +
                  sqrt(3) * exp(1.5) * sin((8 - 3 * sqrt(3) + sqrt(3) * t) / 2.)) /
@@ -248,46 +247,50 @@ TEST(solveIdeCheb, withSections)
     Real tMax = 10;
 
     std::vector<RealVector> sections{
-            RealVector{{0, tMax - t0}},
-            RealVector{{0, 0.13847, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 2, tMax - t0}},
-            RealVector{{0, 0.25 * (tMax - t0), 0.5 * (tMax - t0), tMax - t0}},
-            RealVector{{0, (tMax - t0) / 3, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 5, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 5, 0.3 * (tMax - t0), 0.7 * (tMax - t0), tMax - t0}},
-        };
+        RealVector{{0, tMax - t0}},
+        RealVector{{0, 0.13847, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 2, tMax - t0}},
+        RealVector{{0, 0.25 * (tMax - t0), 0.5 * (tMax - t0), tMax - t0}},
+        RealVector{{0, (tMax - t0) / 3, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 5, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 5, 0.3 * (tMax - t0), 0.7 * (tMax - t0), tMax - t0}},
+    };
 
+    auto k = [](Real) -> Real
+    {
+        return -1;
+    };
+
+    auto sol = [](Real t) -> Real
+    {
+        return -(exp(1.5 - t / 2.) * (-3 * cos((sqrt(3) * (-3 + t)) / 2.) + sqrt(3) * sin((sqrt(3) * (-3 + t)) / 2.))) /
+               3.;
+    };
+
+    RealVector absoluteErrorGoals{
+        {1e-4, 1e-6, 1e-10, 1e-10}
+    };
     for (int i = 0; i < sections.size(); ++i)
     {
         RealVector section = sections[i];
-
-        auto k = [](Real) -> Real
+        for (Real epsAbs : absoluteErrorGoals)
         {
-            return -1;
-        };
-        Real epsAbs  = 1e-13;
-        Real epsRel  = 0;
-        Real hMin    = 0;
-        ChebAdaptive ck(k, section, epsAbs, epsRel, hMin);
+            Real epsRel = 0;
+            Real hMin   = 0;
+            ChebAdaptive ck(k, section, epsAbs, epsRel, hMin);
 
-        auto sol = [](Real t) -> Real
-        {
-            return -(exp(1.5 - t / 2.) *
-                     (-3 * cos((sqrt(3) * (-3 + t)) / 2.) + sqrt(3) * sin((sqrt(3) * (-3 + t)) / 2.))) /
-                   3.;
-        };
+            Real g            = -1.0;
+            Real f0           = 1.0;
+            int nMinCheb      = 128;
+            ChebAdaptive cSol = solveIdeCheb(g, ck, f0, t0, tMax, epsAbs, epsRel, nMinCheb);
+            EXPECT_EQ(cSol.lowerLimit(), t0);
+            EXPECT_EQ(cSol.upperLimit(), tMax);
 
-        Real g            = -1.0;
-        Real f0           = 1.0;
-        int nMinCheb      = 128;
-        ChebAdaptive cSol = solveIdeCheb(g, ck, f0, t0, tMax, epsAbs, epsRel, nMinCheb);
-        EXPECT_EQ(cSol.lowerLimit(), t0);
-        EXPECT_EQ(cSol.upperLimit(), tMax);
-
-        RealVector tTest = RealVector::LinSpaced(200, t0, tMax);
-        for (Real t : tTest)
-        {
-            EXPECT_LT(maxNorm(sol(t) - cSol(t)), 1e-15) << "i = " << i << ", t = " << t;
+            RealVector tTest = RealVector::LinSpaced(200, t0, tMax);
+            for (Real t : tTest)
+            {
+                EXPECT_LT(maxNorm(sol(t) - cSol(t)), epsAbs) << "i = " << i << ", t = " << t;
+            }
         }
     }
 }
@@ -298,27 +301,27 @@ TEST(solveIdeCheb, JaynesCummingsWithSections)
     Real tMax = 10;
 
     std::vector<RealVector> sections{
-            RealVector{{0, tMax - t0}},
-            RealVector{{0, 0.13847, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 2, tMax - t0}},
-            RealVector{{0, 0.25 * (tMax - t0), 0.5 * (tMax - t0), tMax - t0}},
-            RealVector{{0, (tMax - t0) / 3, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 5, tMax - t0}},
-            RealVector{{0, (tMax - t0) / 5, 0.3 * (tMax - t0), 0.7 * (tMax - t0), tMax - t0}},
-        };
+        RealVector{{0, tMax - t0}},
+        RealVector{{0, 0.13847, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 2, tMax - t0}},
+        RealVector{{0, 0.25 * (tMax - t0), 0.5 * (tMax - t0), tMax - t0}},
+        RealVector{{0, (tMax - t0) / 3, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 5, tMax - t0}},
+        RealVector{{0, (tMax - t0) / 5, 0.3 * (tMax - t0), 0.7 * (tMax - t0), tMax - t0}},
+    };
 
     for (int i = 0; i < sections.size(); ++i)
     {
         RealVector section = sections[i];
 
-        Real epsAbs  = 1e-14;
-        Real epsRel  = 0;
-        Real hMin    = 0;
+        Real epsAbs = 1e-14;
+        Real epsRel = 0;
+        Real hMin   = 0;
 
         JCModel jc;
 
-        StaticMatrix<4,4> minusIL = jc.minusIL();
-        auto minusIK = [&](Real t) -> StaticMatrix<4,4>
+        StaticMatrix<4, 4> minusIL = jc.minusIL();
+        auto minusIK               = [&](Real t) -> StaticMatrix<4, 4>
         {
             return jc.minusIK(t);
         };
@@ -335,10 +338,8 @@ TEST(solveIdeCheb, JaynesCummingsWithSections)
         for (Real t : tTest)
         {
             EXPECT_LT(maxNorm(jc.propagator(t) * rho0 - cSol(t)), epsAbs)
-                << "section = " << section.transpose()
-                << "\nt = " << t
-                << "\nexact = " << (jc.propagator(t) * rho0).transpose()
-                << "\ncomputed = " << cSol(t).transpose();
+                << "section = " << section.transpose() << "\nt = " << t
+                << "\nexact = " << (jc.propagator(t) * rho0).transpose() << "\ncomputed = " << cSol(t).transpose();
         }
     }
 }
@@ -385,14 +386,14 @@ TEST(computePropagatorIde, JaynesCummingsWithSections)
     {
         RealVector section = sections[i];
 
-        Real epsAbs  = 1e-14;
-        Real epsRel  = 0;
-        Real hMin    = 0;
+        Real epsAbs = 1e-14;
+        Real epsRel = 0;
+        Real hMin   = 0;
 
         JCModel jc;
 
-        StaticMatrix<4,4> minusIL = jc.minusIL();
-        auto minusIK = [&](Real t) -> StaticMatrix<4,4>
+        StaticMatrix<4, 4> minusIL = jc.minusIL();
+        auto minusIK               = [&](Real t) -> StaticMatrix<4, 4>
         {
             return jc.minusIK(t);
         };

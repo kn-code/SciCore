@@ -164,6 +164,8 @@ SCICORE_EXPORT T modifiedChebyshevClenshawRecurrence(const T* c, int length, Rea
     return x * b1 - b2 + c[0] / Real(2);
 }
 
+// Reference: http://arxiv.org/abs/1512.01803
+// Different from the algorithm in the paper we use an absolute error goal.
 template <MatrixOrScalarType T>
 SCICORE_EXPORT int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
 {
@@ -174,6 +176,7 @@ SCICORE_EXPORT int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
         return N;
     }
 
+    // Step 1: Create envelope
     RealVector envelope(N);
     envelope[N - 1] = maxNorm(c[N - 1]);
     for (int j = N - 2; j >= 0; --j)
@@ -186,15 +189,69 @@ SCICORE_EXPORT int chopChebSeriesAbsolute(const T* c, int N, Real epsAbs)
         return 1;
     }
 
-    for (int k = 0; k + 3 < N; ++k)
+    // Step 2: Scan envelope for plateau point.
+    // Plateau is located at c[plateauPoint+1], c[plateauPoint+2], ... c[N-1]
+    int plateauPoint = -1;
+    int j2           = -1;
+    for (int j = 1; j < N; ++j)
     {
-        if (envelope[k] < epsAbs)
+        j2 = std::round(1.25 * j + 5.25);
+        if (j2 > N - 1)
         {
-            return k + 3;
+            // This is not in original algorithm:
+            // Check if envelope[k] <= epsRel for any k=j...N-3 ?
+            // In this case we would always have r <= 0, and therefore
+            // the plateauPoint would be set to k - 1.
+            // Since j2 is at this point in the code undefined, we skip
+            // step 3 and return immidiately.
+            for (int k = j; k + 3 < N; ++k)
+            {
+                if (envelope[k] < epsAbs)
+                {
+                    return k + 3;
+                }
+            }
+            return N;
+        }
+
+        Real e1 = envelope[j];
+        Real e2 = envelope[j2];
+        Real r  = 5 * (1 - std::log(e1) / std::log(epsAbs));
+
+        if ((e1 == 0) || (e2 / e1 > r))
+        {
+            plateauPoint = j - 1;
+            break;
         }
     }
 
-    return N;
+    // Step 3: Decide precise cutoff point, see paper
+    if (envelope[plateauPoint] == 0)
+    {
+        return plateauPoint + 1;
+    }
+
+    Real tol = std::pow(epsAbs, 7. / 6.);
+    int j3   = -1;
+    for (Real x : envelope)
+    {
+        j3 += static_cast<int>(x >= tol);
+    }
+    if (j3 < j2)
+    {
+        j2           = j3 + 1;
+        envelope[j2] = tol;
+    }
+
+    RealVector cc  = envelope.head(j2 + 1).array().log10();
+    cc            += RealVector::LinSpaced(j2 + 1, 0, Real(-1. / 3.) * std::log10(epsAbs));
+
+    int d = -1;
+    cc.minCoeff(&d);
+
+    // Different from the algorithm in the paper we don't allow
+    // the returned value to be less than plateauPoint + 1.
+    return std::max(d, plateauPoint + 1);
 }
 
 // http://arxiv.org/abs/1512.01803

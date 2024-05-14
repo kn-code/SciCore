@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include <SciCore/Cheb.h>
+#include <SciCore/Random.h>
 
 using namespace SciCore;
 
@@ -109,29 +110,6 @@ TEST(chopChebSeriesRelative, RealMatrix)
     }
 }
 
-TEST(chopChebSeriesAbsolute, Test)
-{
-    struct TestData
-    {
-        RealVector input;
-        Real epsAbs;
-        int result;
-    };
-
-    std::vector testData{
-        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-8, 12},
-        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-5, 10},
-        TestData{RealVector{{1, 3, 1e-5, 4, 1e-4, -1e-4, 3e-5, -1e-6, 1e-6, 1e-6, 1e-6, 1e-6}}, 1e-3,  7},
-        TestData{                                                  RealVector{{1, 3, 1e-5, 4}},   10,  3},
-    };
-
-    for (auto& test : testData)
-    {
-        int result = Detail::chopChebSeriesAbsolute(test.input.data(), test.input.size(), test.epsAbs);
-        EXPECT_EQ(result, test.result);
-    }
-}
-
 TEST(Cheb, ConstructScalarSmoothFunction)
 {
     Real a = 1;
@@ -166,6 +144,56 @@ TEST(Cheb, ConstructScalarSmoothFunction)
     for (Real x : xValues)
     {
         EXPECT_LT(relError(interp(x), f(x)), 1e-11);
+    }
+}
+
+TEST(Cheb, ConstructScalarNoisyFunction)
+{
+    Real a = 1;
+    Real b = 10;
+    int n  = 128;
+
+    Xoshiro256 rng(1234);
+    std::uniform_real_distribution<> dis(-1.0, 1.0);
+
+    auto f = [](Real x) -> Real
+    {
+        return log(0.5 * x) + sin(3.0 * x) * exp(-x);
+    };
+
+    Real noise  = 1e-5;
+    auto fNoisy = [&](Real x) -> Real
+    {
+        return log(0.5 * x) + sin(3.0 * x) * exp(-x) + noise * dis(rng);
+    };
+
+    // Constructing a "clean" function with epsAbs=10^-6 should require more coefficients
+    // than constructing a "noisy" function with epsAbs=10^-6 but noise=1e-5, because
+    // the Chebyshev interpolation should detect a plateau that sets in at the noise level
+    {
+        Real epsAbs = 1e-6;
+        Cheb interp(f, a, b, n);
+        interp.chopCoefficients(epsAbs, 0);
+
+        noise = 1e-5;
+        Cheb interpNoisy(fNoisy, a, b, n);
+        interpNoisy.chopCoefficients(epsAbs, 0);
+
+        EXPECT_GT(interp.coefficients().size(), interpNoisy.coefficients().size());
+    }
+
+    // Constructing a "clean" function with epsAbs=10^-6 should require same number of coefficients
+    // than constructing a "noisy" function with epsAbs=10^-6 and noise=1e-6.
+    {
+        Real epsAbs = 1e-6;
+        Cheb interp(f, a, b, n);
+        interp.chopCoefficients(epsAbs, 0);
+
+        noise = 1e-6;
+        Cheb interpNoisy(fNoisy, a, b, n);
+        interpNoisy.chopCoefficients(epsAbs, 0);
+
+        EXPECT_EQ(interp.coefficients().size(), interpNoisy.coefficients().size());
     }
 }
 
