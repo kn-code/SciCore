@@ -883,8 +883,9 @@ SCICORE_EXPORT ChebAdaptive<T> computePropagatorIde(
                     }
                     sections.conservativeResize(l);
 
+                    Real hMin = 100 * std::numeric_limits<Real>::epsilon();
                     return integrateAdaptive(
-                        [&](Real s) -> T { return k(s) * returnValue(t - s); }, sections, epsAbs, epsRel);
+                        [&](Real s) -> T { return k(s) * returnValue(t - s); }, sections, epsAbs, epsRel, hMin);
                 },
                 tStart, (exit == false) ? tEnd : tMax, nCheb);
 
