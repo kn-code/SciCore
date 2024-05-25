@@ -103,7 +103,7 @@ endblock ()
 FetchContent_Declare(
     Taskflow
     GIT_REPOSITORY https://github.com/taskflow/taskflow.git
-    GIT_TAG        v3.6.0
+    GIT_TAG        v3.7.0
 )
 
 block (SCOPE_FOR VARIABLES)
