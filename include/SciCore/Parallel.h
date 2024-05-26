@@ -68,7 +68,7 @@ SCICORE_EXPORT void parallelFor(
             }
         });
 
-    executor.run(taskflow).wait();
+    executor.run(taskflow).get();
 }
 
 template <typename FunctionT>
@@ -144,7 +144,7 @@ SCICORE_EXPORT auto parallelSum(
             results[nChunks - 1].value = std::move(partialResult);
         });
 
-    executor.run(taskflow).wait();
+    executor.run(taskflow).get();
     ReturnType returnValue = std::move(results[0].value);
     for (size_t i = 1; i < results.size(); ++i)
     {
