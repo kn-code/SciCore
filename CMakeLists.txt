@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
     SciCore
-    VERSION 0.9.0
+    VERSION 1.0.0
     DESCRIPTION "Computational Science in C++"
     HOMEPAGE_URL "https://github.com/kn-code/SciCore"
     LANGUAGES CXX
