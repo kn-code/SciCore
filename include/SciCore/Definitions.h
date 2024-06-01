@@ -19,10 +19,6 @@
 #include <type_traits>
 #include <vector>
 
-#define EIGEN_NO_DEBUG
-#define EIGEN_DONT_PARALLELIZE
-#define EIGEN_USE_BLAS
-#define EIGEN_USE_LAPACKE
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
 

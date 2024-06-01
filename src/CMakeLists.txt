@@ -35,8 +35,7 @@ generate_export_header(SciCore
     EXPORT_FILE_NAME ${CMAKE_CURRENT_SOURCE_DIR}/../include/SciCore/SciCore_export.h
 )
 
-target_link_libraries(SciCore PRIVATE BLAS::BLAS LAPACK::LAPACK)
-target_link_libraries(SciCore PUBLIC Eigen3::Eigen cereal::cereal Taskflow)
+target_link_libraries(SciCore PUBLIC BLAS::BLAS LAPACK::LAPACK Eigen3::Eigen cereal::cereal Taskflow)
 
 target_include_directories(SciCore PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
@@ -44,6 +43,7 @@ target_include_directories(SciCore PUBLIC
 )
 
 target_compile_features(SciCore PUBLIC cxx_std_20)
+target_compile_definitions(SciCore PRIVATE ${SCICORE_COMPILE_DEFINITIONS})
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     # Every app/lib using SciCore needs to be build for the same architecture,
